@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "433221066071",
+    "project_id": "samakibayexpo",
+    "storage_bucket": "samakibayexpo.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:433221066071:android:ffd12d54332066b6767212",
+        "android_client_info": {
+          "package_name": "com.myasma01.samakibayexpo"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD4l2tWFyo-YRHw0Irnc_f5IdlOYHsTAJY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

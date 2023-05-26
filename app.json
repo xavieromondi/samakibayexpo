@@ -11,17 +11,18 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.myasma01.samakibayexpo"
     },
     "android": {
+      "googleServicesFile": "./android/app/src/google-services (11).json",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.myasma01.samakibayexpo"
     },
     "web": {
       "favicon": "./assets/favicon.png"
