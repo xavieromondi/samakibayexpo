@@ -13,6 +13,7 @@ Notifications.setNotificationHandler({
 
 export default function PushTokenGenerator() {
   const [expoPushToken, setExpoPushToken] = useState(null);
+  const [receivedData, setReceivedData] = useState(null); // Add state for received data
 
   useEffect(() => {
     const registerForPushNotificationsAsync = async () => {
@@ -24,7 +25,7 @@ export default function PushTokenGenerator() {
           return;
         }
 
-        const expoPushToken = (await Notifications.getDevicePushTokenAsync())
+        const expoPushToken = (await Notifications.getExpoPushTokenAsync())
           .data;
         console.log("Expo Push Token:", expoPushToken);
 
@@ -35,12 +36,35 @@ export default function PushTokenGenerator() {
     };
 
     registerForPushNotificationsAsync();
+
+    // Subscribe to incoming notifications
+    const subscription =
+      Notifications.addNotificationReceivedListener(handleNotification);
+
+    // Unsubscribe from the listener when the component unmounts
+    return () => subscription.remove();
   }, []);
+
+  const handleNotification = (notification) => {
+    // Extract the data payload from the notification
+    const data = notification.request.content.data;
+
+    // Access the specific data field
+    const fakeData = data.fakeData;
+
+    // Update the received data state
+    setReceivedData(fakeData);
+  };
 
   return (
     <View style={styles.container}>
       {expoPushToken ? (
-        <Text>Your Expo Push Token: {expoPushToken}</Text>
+        <>
+          <Text>Your Expo Push Token: {expoPushToken}</Text>
+          {receivedData && (
+            <Text>Received Data: {JSON.stringify(receivedData)}</Text>
+          )}
+        </>
       ) : (
         <Text>Loading...</Text>
       )}
