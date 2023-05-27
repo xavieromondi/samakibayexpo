@@ -49,11 +49,27 @@ export default function PushTokenGenerator() {
     // Extract the data payload from the notification
     const data = notification.request.content.data;
 
-    // Access the specific data field
-    const fakeData = data.fakeData;
+    // Access the specific data fields
+    const {
+      latitude,
+      longitude,
+      name,
+      phone,
+      address,
+      orderItems,
+      totalPrice,
+    } = data;
 
     // Update the received data state
-    setReceivedData(fakeData);
+    setReceivedData({
+      latitude: latitude,
+      longitude: longitude,
+      name: name,
+      phone: phone,
+      address: address,
+      orderItems: orderItems,
+      totalPrice: totalPrice,
+    });
   };
 
   return (
@@ -62,7 +78,22 @@ export default function PushTokenGenerator() {
         <>
           <Text>Your Expo Push Token: {expoPushToken}</Text>
           {receivedData && (
-            <Text>Received Data: {JSON.stringify(receivedData)}</Text>
+            <>
+              <Text>Latitude: {receivedData.latitude}</Text>
+              <Text>Longitude: {receivedData.longitude}</Text>
+              <Text>Name: {receivedData.name}</Text>
+              <Text>Phone: {receivedData.phone}</Text>
+              <Text>Address: {receivedData.address}</Text>
+              <Text>Order Items:</Text>
+              {receivedData.orderItems.map((item, index) => (
+                <View key={index}>
+                  <Text>Item: {item.name}</Text>
+                  <Text>Price: {item.price}</Text>
+                  <Text>Image URL: {item.imageUrl}</Text>
+                </View>
+              ))}
+              <Text>Total Price: {receivedData.totalPrice}</Text>
+            </>
           )}
         </>
       ) : (
