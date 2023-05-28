@@ -1,7 +1,8 @@
-import { StatusBar } from "expo-status-bar";
 import React, { useState, useEffect } from "react";
+import { StyleSheet, View, Text } from "react-native";
+import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
+import * as Location from "expo-location";
 import * as Notifications from "expo-notifications";
-import { StyleSheet, Text, View } from "react-native";
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -11,45 +12,33 @@ Notifications.setNotificationHandler({
   }),
 });
 
-export default function PushTokenGenerator() {
-  const [expoPushToken, setExpoPushToken] = useState(null);
-  const [receivedData, setReceivedData] = useState(null); // Add state for received data
+export default function RiderMapScreen() {
+  const [userLocation, setUserLocation] = useState(null);
+  const [destinationLocation, setDestinationLocation] = useState(null);
+  const [receivedData, setReceivedData] = useState(null);
 
   useEffect(() => {
-    const registerForPushNotificationsAsync = async () => {
-      try {
-        const { status } = await Notifications.requestPermissionsAsync();
-
-        if (status !== "granted") {
-          alert("Failed to get push token for push notification!");
-          return;
-        }
-
-        const expoPushToken = (await Notifications.getExpoPushTokenAsync())
-          .data;
-        console.log("Expo Push Token:", expoPushToken);
-
-        setExpoPushToken(expoPushToken);
-      } catch (error) {
-        console.log("Error getting push token:", error);
+    (async () => {
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") {
+        console.log("Permission to access location was denied");
+        return;
       }
-    };
 
-    registerForPushNotificationsAsync();
+      let location = await Location.getCurrentPositionAsync({});
+      setUserLocation(location.coords);
+    })();
 
-    // Subscribe to incoming notifications
-    const subscription =
-      Notifications.addNotificationReceivedListener(handleNotification);
+    const subscription = Notifications.addNotificationResponseReceivedListener(
+      handleNotificationResponse
+    );
 
-    // Unsubscribe from the listener when the component unmounts
     return () => subscription.remove();
   }, []);
 
-  const handleNotification = (notification) => {
-    // Extract the data payload from the notification
-    const data = notification.request.content.data;
+  const handleNotificationResponse = (response) => {
+    const data = response.notification.request.content.data;
 
-    // Access the specific data fields
     const {
       latitude,
       longitude,
@@ -58,48 +47,82 @@ export default function PushTokenGenerator() {
       address,
       orderItems,
       totalPrice,
+      // Add additional data fields as needed
     } = data;
 
-    // Update the received data state
     setReceivedData({
-      latitude: latitude,
-      longitude: longitude,
-      name: name,
-      phone: phone,
-      address: address,
-      orderItems: orderItems,
-      totalPrice: totalPrice,
+      latitude,
+      longitude,
+      name,
+      phone,
+      address,
+      orderItems,
+      totalPrice,
+      // Set additional received data fields
+    });
+
+    // Set the destinationLocation state
+    setDestinationLocation({
+      latitude,
+      longitude,
     });
   };
 
   return (
     <View style={styles.container}>
-      {expoPushToken ? (
-        <>
-          <Text>Your Expo Push Token: {expoPushToken}</Text>
-          {receivedData && (
-            <>
-              <Text>Latitude: {receivedData.latitude}</Text>
-              <Text>Longitude: {receivedData.longitude}</Text>
-              <Text>Name: {receivedData.name}</Text>
-              <Text>Phone: {receivedData.phone}</Text>
-              <Text>Address: {receivedData.address}</Text>
-              <Text>Order Items:</Text>
-              {receivedData.orderItems.map((item, index) => (
-                <View key={index}>
-                  <Text>Item: {item.name}</Text>
-                  <Text>Price: {item.price}</Text>
-                  <Text>Image URL: {item.imageUrl}</Text>
-                </View>
-              ))}
-              <Text>Total Price: {receivedData.totalPrice}</Text>
-            </>
+      {userLocation && (
+        <MapView
+          provider={PROVIDER_GOOGLE}
+          style={styles.map}
+          initialRegion={{
+            latitude: userLocation.latitude,
+            longitude: userLocation.longitude,
+            latitudeDelta: 0.0922,
+            longitudeDelta: 0.0421,
+          }}
+        >
+          <Marker
+            coordinate={{
+              latitude: userLocation.latitude,
+              longitude: userLocation.longitude,
+            }}
+            title="Your Location"
+          />
+
+          {destinationLocation && (
+            <Marker
+              coordinate={{
+                latitude: destinationLocation.latitude,
+                longitude: destinationLocation.longitude,
+              }}
+              title="Destination"
+            />
           )}
-        </>
-      ) : (
-        <Text>Loading...</Text>
+        </MapView>
       )}
-      <StatusBar style="auto" />
+
+      {receivedData && (
+        <View style={styles.notificationContainer}>
+          <Text style={styles.notificationText}>Name: {receivedData.name}</Text>
+          <Text style={styles.notificationText}>
+            Phone: {receivedData.phone}
+          </Text>
+          <Text style={styles.notificationText}>
+            Address: {receivedData.address}
+          </Text>
+          <Text style={styles.notificationText}>Order Items:</Text>
+          {receivedData.orderItems.map((item, index) => (
+            <View key={index}>
+              <Text style={styles.notificationText}>Item: {item.name}</Text>
+              <Text style={styles.notificationText}>Price: {item.price}</Text>
+            </View>
+          ))}
+          <Text style={styles.notificationText}>
+            Total Price: {receivedData.totalPrice}
+          </Text>
+          {/* Add additional data fields as needed */}
+        </View>
+      )}
     </View>
   );
 }
@@ -107,8 +130,20 @@ export default function PushTokenGenerator() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  map: {
+    flex: 1,
+  },
+  notificationContainer: {
+    position: "absolute",
+    bottom: 20,
+    left: 20,
     backgroundColor: "#fff",
-    alignItems: "center",
-    justifyContent: "center",
+    padding: 10,
+    borderRadius: 10,
+  },
+  notificationText: {
+    fontSize: 16,
+    marginBottom: 5,
   },
 });
